@@ -12,8 +12,9 @@ const service = axios.create({
 service.interceptors.request.use(
   (config) => {
     // JWT鉴权处理
+    const token = store.state.user.token
     if (store.getters['user/token']) {
-      config.headers['token'] = store.state.user.token
+      config.headers['Authorization'] = 'Bearer ' + token
     }
     return config
   },

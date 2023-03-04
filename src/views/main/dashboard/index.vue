@@ -1,6 +1,5 @@
 <template>
   <div class="box">
-    123
   </div>
 </template>
 

@@ -18,13 +18,13 @@
       <div class="user-info">
         <el-dropdown>
           <span class="el-dropdown-link">
-            管理员
+            管理員
             <i class="el-icon-arrow-down el-icon--right"></i>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="showPasswordLayer">修改密码</el-dropdown-item>
-              <el-dropdown-item @click="loginOut">退出登录</el-dropdown-item>
+              <el-dropdown-item @click="showPasswordLayer">修改密碼</el-dropdown-item>
+              <el-dropdown-item @click="loginOut">登出</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>

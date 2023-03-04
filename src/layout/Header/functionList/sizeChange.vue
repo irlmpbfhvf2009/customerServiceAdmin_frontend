@@ -28,7 +28,7 @@ export default defineComponent({
     const route = useRoute()
     const elementSize = computed(() => store.state.app.elementSize)
     const list = [
-      { size: 'default', name: '默认' },
+      { size: 'default', name: '默認' },
       { size: 'medium', name: '中' },
       { size: 'small', name: '小' },
       { size: 'mini', name: '迷你' },

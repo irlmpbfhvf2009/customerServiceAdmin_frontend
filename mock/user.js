@@ -1,6 +1,6 @@
 const users = [
   { name: 'admin', password: '123456', token: 'admin', info: {
-    name: '系统管理员'
+    name: '系統管理員'
   }},
   { name: 'editor', password: '123456', token: 'editor', info: {
     name: '编辑人员'

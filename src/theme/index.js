@@ -1,7 +1,7 @@
 
 export const style = {
   'default': {
-    name: '默认菜单风格',
+    name: '默認菜單風格',
     menu: {
       textColor: '#bfcbd9',
       background: '#28415a',

@@ -18,7 +18,7 @@
 import { defineComponent, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useStore } from 'vuex'
-import { passwordChange } from '@/api/user'
+import { passwordChange } from '@/api/app'
 import Layer from '@/components/layer/index.vue'
 export default defineComponent({
   components: {
@@ -41,29 +41,34 @@ export default defineComponent({
     const layerDom = ref(null)
     const store = useStore()
     let form = ref({
-      userId: '123465',
-      name: '',
+      id: store.state.user.info.id,
       old: '',
       new: ''
     })
     const rules = {
-      old: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
-      new: [{ required: true, message: '请输入新密码', trigger: 'blur' }],
+      old: [{ required: true, message: '請輸入原密碼', trigger: 'blur' }],
+      new: [{ required: true, message: '請輸入新密碼', trigger: 'blur' }],
     }
     function submit() {
+      if(form.value.old != store.state.user.info.password) {
+        ElMessage({
+          type: 'error',
+          message: '原密碼錯誤'
+        })
+        return
+      }
       if (ruleForm.value) {
         ruleForm.value.validate((valid) => {
           if (valid) {
             let params = {
-              id: form.value.userId,
-              old: form.value.old,
-              new: form.value.new
+              id: form.value.id,
+              password: form.value.new
             }
             passwordChange(params)
             .then(res => {
               ElMessage({
                 type: 'success',
-                message: '密码修改成功，即将跳转到登录页面'
+                message: res.msg
               })
               layerDom.value && layerDom.value.close()
               setTimeout(() => {

@@ -19,7 +19,6 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-// import { add } from '@/api/table'
 import { updateAdmin,addAdmin } from '@/api/app'
 import { radioData } from './enum'
 import Layer from '@/components/layer/index.vue'

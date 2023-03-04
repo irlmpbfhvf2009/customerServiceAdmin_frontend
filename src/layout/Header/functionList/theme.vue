@@ -1,14 +1,14 @@
 <template>
-  <div title="系统设置" @click="drawerChange(true)">
+  <div title="系統設置" @click="drawerChange(true)">
     <i class="sfont system-shezhi"></i>
   </div>
   <el-drawer
-    title="系统设置"
+    title="系統設置"
     v-model="drawer"
     size="300px"
     :show-close="false"
     direction="rtl">
-      <h3>整体风格设置</h3>
+      <h3>整體風格設置</h3>
       <div class="theme-box">
         <theme-icon
           v-model:active="state.style"
@@ -23,7 +23,7 @@
           :activeColor="row.page.color"
         ></theme-icon>
       </div>
-      <h3>主题色</h3>
+      <h3>主題色</h3>
       <div class="theme-box">
         <theme-color
           v-for="(item, key) in themeColorArr"
@@ -35,7 +35,7 @@
           :tip="item.tip"
         ></theme-color>
       </div>
-      <h3>其他设置</h3>
+      <h3>其他設置</h3>
       <div class="list">
         <div class="list-item" v-for="option in options" :key="option.name">
           <span>{{ option.name }}</span>
@@ -111,9 +111,9 @@ export default defineComponent({
     })
     let drawer = ref(false)
     const options = reactive([
-      { name: '显示logo', value: store.state.app.showLogo, store: 'showLogo' },
-      { name: '显示面包屑导航', value: store.state.app.showTabs, store: 'showTabs' },
-      { name: '保持一个菜单展开', value: store.state.app.expandOneMenu, store: 'expandOneMenu' }
+      { name: '顯示logo', value: store.state.app.showLogo, store: 'showLogo' },
+      { name: '顯示麵包屑導航', value: store.state.app.showTabs, store: 'showTabs' },
+      { name: '保持一個菜單展開', value: store.state.app.expandOneMenu, store: 'expandOneMenu' }
     ])
     const drawerChange = (value) => {
       drawer.value = value

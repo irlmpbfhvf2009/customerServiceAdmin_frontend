@@ -22,7 +22,7 @@ export default defineComponent({
     },
     tip: {
       type: String,
-      default: '默认蓝'
+      default: '默認藍'
     },
     color: {
       type: String,

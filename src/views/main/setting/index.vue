@@ -98,15 +98,6 @@ export default defineComponent({
       }
       getAllAdmins(params)
       .then(res => {
-        // let data = res.data.list
-        // if (Array.isArray(data)) {
-        //   data.forEach(d => {
-        //     const select = selectData.find(select => select.value === d.choose)
-        //     select ? d.chooseName = select.label : d.chooseName = d.choose
-        //     const radio = radioData.find(select => select.value === d.radio)
-        //     radio ? d.radioName = radio.label : d.radio
-        //   })
-        // }
         tableData.value = res.data.list
         page.total = Number(res.data.pager.total)
       })

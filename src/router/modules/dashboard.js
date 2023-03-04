@@ -10,7 +10,7 @@ const route = [
       {
         path: 'dashboard',
         component: createNameComponent(() => import('@/views/main/dashboard/index.vue')),
-        meta: { title: '首页', icon: 'el-icon-menu', hideClose: true }
+        meta: { title: '首頁', icon: 'el-icon-menu', hideClose: true }
       }
     ]
   }

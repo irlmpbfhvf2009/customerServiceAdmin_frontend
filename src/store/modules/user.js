@@ -1,4 +1,4 @@
-import { loginApi, getInfoApi, loginOutApi } from '@/api/user'
+import { loginApi,getInfoApi,loginOutApi} from '@/api/app'
 
 const state = () => ({
   token: '', // 登录token
@@ -49,10 +49,10 @@ const actions = {
   },
 
   // login out the system after user click the loginOut button
-  loginOut({ commit }) {
-    loginOutApi()
+  loginOut({ commit,getters }) {
+    loginOutApi(getters)
     .then(res => {
-
+      //{code: 200, data: {}, msg: 'success'}
     })
     .catch(error => {
 
