@@ -1,17 +1,17 @@
 <template>
   <div class="layout-container">
     <div class="layout-container-form flex space-between">
-      <!-- <div class="layout-container-form-handle">
+      <div class="layout-container-form-handle">
         <el-button type="primary" icon="el-icon-circle-plus-outline" @click="handleAdd">新增</el-button>
         <el-popconfirm title="批量删除" @confirm="handleDel(chooseData)">
           <template #reference>
             <el-button type="danger" icon="el-icon-delete" :disabled="chooseData.length === 0">批量删除</el-button>
           </template>
         </el-popconfirm>
-      </div> -->
+      </div>
       <div class="layout-container-form-search">
-        <el-input v-model="query.input" placeholder="请输入关键词进行检索" @change="getTableConfig(true)"></el-input>
-        <el-button type="primary" icon="el-icon-search" class="search-btn" @click="getTableConfig(true)">搜索</el-button>
+        <el-input v-model="query.input" placeholder="请输入关键词进行检索" @change="getTableData(true)"></el-input>
+        <el-button type="primary" icon="el-icon-search" class="search-btn" @click="getTableData(true)">搜索</el-button>
       </div>
     </div>
     <div class="layout-container-table">
@@ -20,26 +20,29 @@
         v-model:page="page"
         v-loading="loading"
         :showIndex="true"
-        :showSelection="false"
+        :showSelection="true"
         :data="tableData"
-        @getTableConfig="getTableConfig"
+        @getTableData="getTableData"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column prop="key" label="参数名称" align="center" />
-        <el-table-column prop="value" label="值" align="center" />
+        <el-table-column prop="username" label="用戶名" align="center" />
+        <el-table-column prop="roles" label="角色" align="center" />
+        <el-table-column prop="enabled" label="狀態" align="center" />
+        <el-table-column prop="createTime" label="創建時間" align="center" />
+        <el-table-column prop="regIp" label="註冊IP" align="center" />
+        <el-table-column prop="lastLoginIP" label="最後登入IP" align="center" />
         <el-table-column label="操作" align="center" fixed="right" width="200">
           <template #default="scope">
             <el-button @click="handleEdit(scope.row)">编辑</el-button>
-            <!-- <el-popconfirm title="删除" @confirm="handleDel([scope.row])">
+            <el-popconfirm title="删除" @confirm="handleDel([scope.row])">
               <template #reference>
                 <el-button type="danger">删除</el-button>
               </template>
-            </el-popconfirm> -->
+            </el-popconfirm>
           </template>
         </el-table-column>
       </Table>
-      <Layer :layer="layer" @getTableConfig="getTableConfig" v-if="layer.show" />
-      <!-- <Layer :layer="layer" @getTableData="getTableData" v-if="layer.show" /> -->
+      <Layer :layer="layer" @getTableData="getTableData" v-if="layer.show" />
     </div>
   </div>
 </template>
@@ -47,11 +50,11 @@
 <script>
 import { defineComponent, ref, reactive } from 'vue'
 import Table from '@/components/table/index.vue'
-// import { getData, del } from '@/api/table'
-import { getConfig } from '@/api/app'
+// import { del } from '@/api/table'
+import { getAllAdmins,delAdmin } from '@/api/app'
 import Layer from './layer.vue'
 import { ElMessage } from 'element-plus'
-import { selectData, radioData } from './enum'
+// import { selectData, radioData } from './enum'
 export default defineComponent({
   name: 'crudTable',
   components: {
@@ -83,42 +86,29 @@ export default defineComponent({
     }
     // 获取表格数据
     // params <init> Boolean ，默认为false，用于判断是否需要初始化分页
-    const getTableConfig = (init) => {
+    const getTableData = (init) => {
       loading.value = true
       if (init) {
         page.index = 1
       }
       let params = {
-        page: page.index,
+        page: page.index-1,
         pageSize: page.size,
         ...query
       }
-      // getConfig().then(res=>{
-      //   console.log(res)
-      // })
-      getConfig(params)
+      getAllAdmins(params)
       .then(res => {
-        let data = res.data.list
-        console.log(res.data.list)
-        if (Array.isArray(data)) {
-          data.forEach(d => {
-            const select = selectData.find(select => select.value === d)
-            select ? d = select.label : d = d.choose
-            // const radio = radioData.find(select => select.value === d.radio)
-            // radio ? d.radioName = radio.label : d.radio
-          })
-        }
-        console.log(res.data.list.length)
-        for(var i=0;i<res.data.list.length;i++){
-          if(res.data.list[i].value=='True'){
-            res.data.list[i].value = '开启'
-          }
-          if(res.data.list[i].value=='False'){
-            res.data.list[i].value = '关闭'
-          }
-        }
+        // let data = res.data.list
+        // if (Array.isArray(data)) {
+        //   data.forEach(d => {
+        //     const select = selectData.find(select => select.value === d.choose)
+        //     select ? d.chooseName = select.label : d.chooseName = d.choose
+        //     const radio = radioData.find(select => select.value === d.radio)
+        //     radio ? d.radioName = radio.label : d.radio
+        //   })
+        // }
         tableData.value = res.data.list
-        // page.total = Number(res.data.pager.total)
+        page.total = Number(res.data.pager.total)
       })
       .catch(error => {
         tableData.value = []
@@ -129,72 +119,36 @@ export default defineComponent({
         loading.value = false
       })
     }
-    // // 获取表格数据
-    // // params <init> Boolean ，默认为false，用于判断是否需要初始化分页
-    // const getTableData = (init) => {
-    //   loading.value = true
-    //   if (init) {
-    //     page.index = 1
-    //   }
-    //   let params = {
-    //     page: page.index,
-    //     pageSize: page.size,
-    //     ...query
-    //   }
-    //   getData(params)
-    //   .then(res => {
-    //     let data = res.data.list
-    //     console.log(data)
-    //     if (Array.isArray(data)) {
-    //       data.forEach(d => {
-    //         const select = selectData.find(select => select.value === d.choose)
-    //         select ? d.chooseName = select.label : d.chooseName = d.choose
-    //         const radio = radioData.find(select => select.value === d.radio)
-    //         radio ? d.radioName = radio.label : d.radio
-    //       })
-    //     }
-    //     tableData.value = res.data.list
-    //     page.total = Number(res.data.pager.total)
-    //   })
-    //   .catch(error => {
-    //     tableData.value = []
-    //     page.index = 1
-    //     page.total = 0
-    //   })
-    //   .finally(() => {
-    //     loading.value = false
-    //   })
-    // }
+    
     // 删除功能
-    // const handleDel = (data) => {
-    //   let params = {
-    //     ids: data.map((e)=> {
-    //       return e.id
-    //     }).join(',')
-    //   }
-    //   del(params)
-    //   .then(res => {
-    //     ElMessage({
-    //       type: 'success',
-    //       message: '删除成功'
-    //     })
-    //     getTableData(tableData.value.length === 1 ? true : false)
-    //   })
-    // }
+    const handleDel = (data) => {
+      let params = {
+        ids: data.map((e)=> {
+          return e.id
+        }).join(',')
+      }
+      delAdmin(params)
+      .then(res => {
+        ElMessage({
+          type: 'success',
+          message: res.msg
+        })
+        getTableData(tableData.value.length === 1 ? true : false)
+      })
+    }
     // 新增弹窗功能
-    // const handleAdd = () => {
-    //   layer.title = '新增数据'
-    //   layer.show = true
-    //   delete layer.row
-    // }
+    const handleAdd = () => {
+      layer.title = '新增數據'
+      layer.show = true
+      delete layer.row
+    }
     // 编辑弹窗功能
     const handleEdit = (row) => {
-      layer.title = '编辑数据'
+      layer.title = '編輯數據'
       layer.row = row
       layer.show = true
     }
-    // getTableData(true)
-    getTableConfig(true)
+    getTableData(true)
     return {
       query,
       tableData,
@@ -203,10 +157,10 @@ export default defineComponent({
       page,
       layer,
       handleSelectionChange,
-      // handleAdd,
+      handleAdd,
       handleEdit,
-      // handleDel,
-      getTableConfig
+      handleDel,
+      getTableData,
     }
   }
 })

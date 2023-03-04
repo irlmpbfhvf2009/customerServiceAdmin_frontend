@@ -4,13 +4,14 @@ const route = [
   {
     path: '/setting',
     component: Layout,
-    redirect: '/setting',
-    meta: { title: 'setting', icon: 'el-icon-setting' },
+    redirect: '/setting/admins-setting',
+    meta: { title: '系統設定', icon: 'el-icon-setting' },
+    alwayShow: true,
     children: [
       {
-        path: 'setting',
+        path: 'admins-setting',
         component: createNameComponent(() => import('@/views/main/setting/index.vue')),
-        meta: { title: '参数设定', icon: 'el-icon-setting', hideClose: true }
+        meta: { title: '用戶管理', cache: true, roles: ['admin'] }
       }
     ]
   }

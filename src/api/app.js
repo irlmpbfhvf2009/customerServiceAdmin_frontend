@@ -1,45 +1,35 @@
 import request from '@/utils/system/request'
 
-// 获取数据api
-export function getConfig() {
-    return request({
-      url: '/getConfig',
-      method: 'get',
-      baseURL: '/dev',
-    })
-  }
-export function updateConfig(data) {
-    return request({
-      url: '/updateConfig',
-      method: 'post',
-      baseURL: '/dev',
-      data,
-    })
-  }
-
-export function groupCategory(data) {
+// 新增
+export function addAdmin(data) {
   return request({
-    url: '/groupCategory',
+    url: '/admins/addAdmin',
     method: 'post',
-    baseURL: '/dev',
     data
   })
 }
-export function getAdvertiseData(data) {
+// 查詢
+export function getAllAdmins(params) {
   return request({
-    url: '/getAdvertiseData',
+    url: '/admins/getAllAdmins',
     method: 'post',
-    baseURL: '/dev',
-    data
+    params,
   })
 }
-export function updateAdvertiseData(data) {
+// 編輯
+export function updateAdmin(data) {
   return request({
-    url: '/updateAdvertiseData',
+    url: '/admins/updateAdmin',
     method: 'post',
-    baseURL: '/dev',
-    data
+    data,
   })
 }
 
-  
+// 删除
+export function delAdmin(data) {
+  return request({
+    url: '/admins/delAdmin',
+    method: 'post',
+    data
+  })
+}

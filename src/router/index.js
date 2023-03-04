@@ -32,9 +32,9 @@ const router = createRouter({
 })
 let asyncRoutes = [
   ...Dashboard,
-  ...Setting,
   ...Panel,
   ...Pages,
+  ...Setting,
 ]
 // 动态路由的权限新增，供登录后调用
 export function addRoutes() {
