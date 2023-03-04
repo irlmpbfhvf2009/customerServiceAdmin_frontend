@@ -3,10 +3,10 @@ const users = [
     name: '系統管理員'
   }},
   { name: 'editor', password: '123456', token: 'editor', info: {
-    name: '编辑人员'
+    name: '編輯人員'
   }},
   { name: 'test', password: '123456', token: 'test', info: {
-    name: '测试人员'
+    name: '測試人員'
   }},
 ]
 export default [
@@ -28,7 +28,7 @@ export default [
         return {
           code: 401,
           data: {},
-          msg: '用户名或密码错误'
+          msg: '用戶名或密碼錯誤'
         };
       }
       
@@ -53,7 +53,7 @@ export default [
         return {
           code: 403,
           data: {},
-          msg: '无访问权限'
+          msg: '無訪問權限'
         };
       }
       

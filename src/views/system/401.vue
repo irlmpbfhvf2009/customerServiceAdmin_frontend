@@ -5,11 +5,11 @@
         <img class="pic-404__parent" :src="first" alt="404" />
       </div>
       <div class="bullshit">
-        <div class="bullshit__oops">无权限访问!</div>
+        <div class="bullshit__oops">無權限訪問!</div>
         <div class="bullshit__info">
-          您没有访问权限，如需权限，请联系上级授权！
+          您沒有訪問權限，如需權限，請聯繫上級授權！
         </div>
-        <el-button @click="go" type="primary" round>跳转首页</el-button>
+        <el-button @click="go" type="primary" round>跳轉首頁</el-button>
       </div>
     </div>
   </div>
@@ -33,9 +33,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-  .wscn-http404-container {
-    
-  }
   .wscn-http404 {
     position: relative;
     overflow: hidden;

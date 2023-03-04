@@ -8,11 +8,11 @@
         <img class="pic-404__child right" :src="four_cloud" alt="404" />
       </div>
       <div class="bullshit">
-        <div class="bullshit__oops">页面不存在!</div>
+        <div class="bullshit__oops">頁面不存在!</div>
         <div class="bullshit__info">
-          请检查您输入的网址是否正确，或单击下面的按钮返回主页
+          請檢查您輸入的網址是否正確，或單擊下面的按钮返回主頁！
         </div>
-        <el-button @click="go" type="primary" round>跳转首页</el-button>
+        <el-button @click="go" type="primary" round>跳轉首頁</el-button>
       </div>
     </div>
   </div>
@@ -38,9 +38,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-  .wscn-http404-container {
-    
-  }
   .wscn-http404 {
     position: relative;
     overflow: hidden;
