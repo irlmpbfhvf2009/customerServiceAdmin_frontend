@@ -2,8 +2,8 @@
   <div>
     <h1>聊天室</h1>
     <div class="chat-container">
-      <div v-for="message in messages" :key="message.uniqueId" :class="{ 'from-me': message.fromMe }">
-        <div class="message">{{ message.message }}</div>
+      <div v-for="message in messages" :key="message.uniqueId" :class="'from-me'">
+        <div class="message">{{ message.content }}</div>
       </div>
     </div>
     <div class="input-container">
@@ -41,14 +41,14 @@ export default ({
         })
       })
     }
+
     connect()
 
     const handleMessage = (message) => {
-      console.log(message.message)
-      // const fromMe = message.username === this.username
+      console.log(message)
       messages.value.push({
-        id: message.uniqueId,
-        message: message.message,
+        uniqueId: message.uniqueId,
+        content: message.content,
       })
     }
     const sendMessage = () => {
@@ -58,7 +58,7 @@ export default ({
 
       const message = {
         uniqueId: uniqueId,
-        message: messageInput.value,
+        content: messageInput.value,
       }
       console.log(JSON.stringify(message))
       stompClient.value.send('/app/topic/chat/'+uniqueId, {}, JSON.stringify(message))

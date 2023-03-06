@@ -15,6 +15,7 @@ import { createNameComponent } from './createNode'
 
 // 引入modules
 import Dashboard from './modules/dashboard'
+import CustomerService from './modules/chat_server'
 import Setting from './modules/setting'
 import Pages from './modules/pages'
 import System from './modules/system'
@@ -31,6 +32,7 @@ const router = createRouter({
 })
 let asyncRoutes = [
   ...Dashboard,
+  ...CustomerService,
   ...Pages,
   ...Setting,
 ]

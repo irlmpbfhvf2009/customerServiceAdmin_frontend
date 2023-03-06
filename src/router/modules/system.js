@@ -33,7 +33,7 @@ const route = [
   },
   {
     path: '/chat',
-    component: createNameComponent(() => import('@/views/main/client/chat.vue')),
+    component: createNameComponent(() => import('@/views/main/chat_client/index.vue')),
     hideMenu: true,
     meta: { title: '測試', hideTabs: true }
   },
