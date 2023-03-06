@@ -16,7 +16,6 @@ import { createNameComponent } from './createNode'
 // 引入modules
 import Dashboard from './modules/dashboard'
 import Setting from './modules/setting'
-import Panel from './modules/panel'
 import Pages from './modules/pages'
 import System from './modules/system'
 
@@ -32,7 +31,6 @@ const router = createRouter({
 })
 let asyncRoutes = [
   ...Dashboard,
-  ...Panel,
   ...Pages,
   ...Setting,
 ]
