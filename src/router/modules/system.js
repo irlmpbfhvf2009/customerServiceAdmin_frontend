@@ -29,7 +29,13 @@ const route = [
     path: '/login',
     component: createNameComponent(() => import('@/views/system/login.vue')),
     hideMenu: true,
-    meta: { title: '登录', hideTabs: true }
+    meta: { title: '登入', hideTabs: true }
+  },
+  {
+    path: '/chat',
+    component: createNameComponent(() => import('@/views/main/client/chat.vue')),
+    hideMenu: true,
+    meta: { title: '測試', hideTabs: true }
   },
   {
     // 找不到路由重定向到404页面

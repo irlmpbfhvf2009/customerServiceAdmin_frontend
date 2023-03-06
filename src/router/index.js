@@ -96,7 +96,7 @@ if (store.state.user.token) {
   addRoutes()
 }
 
-const whiteList = ['/login']
+const whiteList = ['/login', '/chat']
 
 router.beforeEach((to, _from, next) => {
   NProgress.start();

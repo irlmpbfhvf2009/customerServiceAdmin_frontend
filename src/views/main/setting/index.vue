@@ -50,11 +50,9 @@
 <script>
 import { defineComponent, ref, reactive } from 'vue'
 import Table from '@/components/table/index.vue'
-// import { del } from '@/api/table'
 import { getAllAdmins,delAdmin } from '@/api/app'
 import Layer from './layer.vue'
 import { ElMessage } from 'element-plus'
-// import { selectData, radioData } from './enum'
 export default defineComponent({
   name: 'crudTable',
   components: {
