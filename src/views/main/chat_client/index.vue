@@ -1,17 +1,13 @@
 <template>
   <div class="container">
     <h1>Chat Room</h1>
-    <div class="chat-log">
-      <div class="layout-container">
-
-        <div v-for="m in messages" class="chat-bubble" :class="[m.sender === 'me' ? 'sender' : 'receiver']">
-          <div class="time">03-07 15:01:31</div>
-          <div class="message">{{ m.content }}</div>
-        </div>
-
+    <div class="layout-container">
+      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === 'me' ? 'sender' : 'receiver']">
+        <div class="time">03-07 15:01:31</div>
+        <div class="message">{{ m.content }}</div>
       </div>
-
     </div>
+
     <div class="input-box">
       <input type="text" v-model="messageInput" class="received" placeholder="Type your message here..."
         @keyup.enter="sendMessage" />
@@ -25,12 +21,13 @@
 <script>
 import Stomp from "stompjs";
 import SockJS from "sockjs-client/dist/sockjs.min.js";
-import { socketData } from './enum'
-import { ref } from 'vue'
+import { socketData } from './enum';
+import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 
 export default ({
   setup() {
+    const room = ref([])
     const messages = ref([]);
     const messageInput = ref('');
     const stompClient = ref(null);
@@ -41,7 +38,6 @@ export default ({
       uniqueId = uuidv4();
       document.cookie = `uniqueId=${uniqueId};path=/`;
     }
-
     const connect = () => {
       const socket = new SockJS(socketData[0].label)
       stompClient.value = Stomp.over(socket)
@@ -52,6 +48,7 @@ export default ({
       })
     }
     connect()
+
     const handleMessage = (message) => {
       console.log(message)
       messages.value.push({
@@ -59,16 +56,15 @@ export default ({
         content: message.content,
       })
     }
+
     // 啟動連線
     // connect()
 
     function sendMessage() {
       if (messageInput.value) {
-        const message = { id: Date.now(),uniqueId:uniqueId, sender: 'me', content: messageInput.value };
+        const message = { id: Date.now(), uniqueId: uniqueId, sender: 'me', content: messageInput.value };
         messages.value.push(message);
         console.log(message)
-        messageInput.value = '';
-
         console.log(JSON.stringify(message))
         stompClient.value.send('/app/topic/chat/' + uniqueId, {}, JSON.stringify(message))
         messageInput.value = ''
@@ -79,39 +75,42 @@ export default ({
       messages,
       messageInput,
       sendMessage,
-
     };
-    // }
-    return {
-      // stompClient,
-      // messages,
-      // messageInput,
-      // connect,
-      // handleMessage,
-      // sendMessage,
-    }
   }
+
 })
 </script>
 <style>
 h1 {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .container {
-  width: 100%;
-  max-width: 800px;
+  width: 50%;
+  height: 500px;
+  min-width: 400px;
   margin: 0 auto;
 }
 
-.chat-log {
+.layout-container {
+  width: 100%;
+  height: 95%;
+  margin: 0px;
   background-color: rgb(243, 244, 248);
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 10px;
-  height: 650px;
+  padding-top: 50px;
   margin-bottom: 20px;
+}
+
+.input-box {
+  width: 100%;
+  height: 5%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 input[type="text"] {
@@ -152,14 +151,6 @@ button:hover:not(:disabled) {
 
 
 
-
-.layout-container {
-  width: calc(100%);
-  padding-top: 30px;
-  height: 95%;
-  margin: 0px;
-  background-color: rgb(243, 244, 248);
-}
 
 .chat-bubble {
   position: relative;
