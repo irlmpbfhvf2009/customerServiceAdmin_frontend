@@ -1,31 +1,30 @@
 <template>
-    <div class="box">
-        <div class="chat-window">
-            <div class="message-list" ref="messageList">
-                <div v-for="(message, index) in messages" :key="index" class="message">
-                    <div class="message-header">
-                        {{ message.sender }} said:
-                        <span class="message-time">{{ message.time }}</span>
-                    </div>
-                    <div class="message-body">{{ message.text }}</div>
-                </div>
-            </div>
-            <div class="message-input">
-                <input type="text" v-model="messageInput" @keyup.enter="sendMessage">
-                <button @click="sendMessage">Send</button>
-            </div>
-        </div>
+  <div class="full">
+    <div class="left">
+      <guest />
     </div>
+    <div class="content">
+      <msg />
+    </div>
+  </div>
 </template>
-  
+
+
 <script>
+import guest from './guest.vue'
+import msg from './msg.vue'
 import Stomp from "stompjs";
 import SockJS from "sockjs-client/dist/sockjs.min.js";
 import { socketData } from './enum'
-import { ref } from 'vue'
+import { ref,defineComponent } from 'vue'
 import { v4 as uuidv4 } from 'uuid';
 
-export default ({
+export default defineComponent({
+  name: 'index',
+  components: {
+    guest,
+    msg,
+  },
   setup() {
     const stompClient = ref(null);
     const messages = ref([]);
@@ -84,9 +83,22 @@ export default ({
 </script>
   
 <style lang="scss" scoped>
-.box {
-    padding: 15px;
-}
+  .full {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    box-sizing: border-box;
+    display: flex;
+    .left {
+      width: 300px;
+    }
+    .content {
+      flex: 1;
+      width: calc(100% - 250px);
+      height: 100%;
+    }
+  }
+
 .chat-window {
   display: flex;
   flex-direction: column;
