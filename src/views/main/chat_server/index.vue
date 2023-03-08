@@ -13,11 +13,7 @@
 <script>
 import guest from './guest.vue'
 import msg from './msg.vue'
-import Stomp from "stompjs";
-import SockJS from "sockjs-client/dist/sockjs.min.js";
-import { socketData } from './enum'
-import { ref,defineComponent } from 'vue'
-import { v4 as uuidv4 } from 'uuid';
+import { defineComponent } from 'vue'
 
 export default defineComponent({
   name: 'index',
@@ -26,57 +22,7 @@ export default defineComponent({
     msg,
   },
   setup() {
-    const stompClient = ref(null);
-    const messages = ref([]);
-    const messageInput = ref('');
-    const messageList = ref(null);
-    // 檢查cookie中是否有識別碼，如果沒有，生成一個新的識別碼
-    let uniqueId = document.cookie.replace(/(?:(?:^|.*;\s*)uniqueId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    if (!uniqueId) {
-      uniqueId = uuidv4();
-      document.cookie = `uniqueId=${uniqueId};path=/`;
-    }
-
-    const connect = () => {
-      const socket = new SockJS(socketData[0].label)
-      stompClient.value = Stomp.over(socket)
-      stompClient.value.connect({}, () => {
-        stompClient.value.subscribe('/topic/chat/'+uniqueId, (message) => {
-          handleMessage(JSON.parse(message.body))
-        })
-      })
-    }
-
-    connect()
-
-    const handleMessage = (message) => {
-      console.log(message)
-      messages.value.push({
-        uniqueId: message.uniqueId,
-        content: message.content,
-      })
-    }
-    const sendMessage = () => {
-      if (!messageInput.value) {
-        return
-      }
-
-      const message = {
-        uniqueId: uniqueId,
-        content: messageInput.value,
-      }
-      console.log(JSON.stringify(message))
-      stompClient.value.send('/app/topic/chat/'+uniqueId, {}, JSON.stringify(message))
-      messageInput.value = ''
-    }
     return {
-      stompClient,
-      messages,
-      messageInput,
-      messageList,
-      connect,
-      handleMessage,
-      sendMessage,
     }
   }
 })

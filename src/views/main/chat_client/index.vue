@@ -9,7 +9,7 @@
     </div>
 
     <div class="input-box">
-      <input type="text" v-model="messageInput" class="received" placeholder="Type your message here..."
+      <input type="text" v-model="messageInput" class="sent" placeholder="Type your message here..."
         @keyup.enter="sendMessage" />
       <button @click="sendMessage">
         Send
@@ -22,15 +22,16 @@
 import Stomp from "stompjs";
 import SockJS from "sockjs-client/dist/sockjs.min.js";
 import { socketData } from './enum';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 
 export default ({
   setup() {
-    const room = ref([])
+    const stompClient = ref(null);
+    const sender = ref('');
+    const reactive = ref('');
     const messages = ref([]);
     const messageInput = ref('');
-    const stompClient = ref(null);
 
     // 檢查cookie中是否有識別碼，如果沒有，生成一個新的識別碼
     let uniqueId = document.cookie.replace(/(?:(?:^|.*;\s*)uniqueId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
@@ -38,27 +39,28 @@ export default ({
       uniqueId = uuidv4();
       document.cookie = `uniqueId=${uniqueId};path=/`;
     }
-    const connect = () => {
-      const socket = new SockJS(socketData[0].label)
-      stompClient.value = Stomp.over(socket)
-      stompClient.value.connect({}, () => {
-        stompClient.value.subscribe('/topic/chat/' + uniqueId, (message) => {
-          handleMessage(JSON.parse(message.body))
-        })
-      })
-    }
-    connect()
+    sender.value = uniqueId;
 
+
+
+    const socket = new SockJS(socketData[0].label)
+    stompClient.value = Stomp.over(socket)
+
+    stompClient.value.connect({}, () => {
+      const user = { uniqueId: uniqueId, sender: sender.value, timestamp: new Date() };
+      stompClient.value.send('/app/chat.addUser', {}, JSON.stringify(user))
+      stompClient.value.subscribe('/topic/chat/' + uniqueId, (message) => {
+        handleMessage(JSON.parse(message.body))
+      })
+    })
+    
     const handleMessage = (message) => {
-      console.log(message)
       messages.value.push({
         uniqueId: message.uniqueId,
         content: message.content,
       })
     }
 
-    // 啟動連線
-    // connect()
 
     function sendMessage() {
       if (messageInput.value) {
@@ -123,7 +125,7 @@ input[type="text"] {
 }
 
 
-input[type="text"].received {
+input[type="text"].sent {
   background-color: #e6e6e6;
   color: #000;
 }
