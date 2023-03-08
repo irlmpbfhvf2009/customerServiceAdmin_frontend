@@ -19,12 +19,11 @@ export default defineComponent({
   setup() {
     const fromUser = ref([]);
     const user = ref(null);
-    const activeCategory = inject('active')
+    const active= inject('active')
+    const receiver = inject('receiver')
 
-    watch(activeCategory, (newValue, oldValue) => {
-
+    watch(active, (newValue, oldValue) => {
       user.value = newValue
-
       const existingUserIndex = fromUser.value.findIndex(u => u.username === newValue.sender);
       if (newValue.type === 'JOIN' && newValue.isUser === true) {
         if (existingUserIndex === -1) {
@@ -44,8 +43,9 @@ export default defineComponent({
       }
     });
 
-    const updateReceiver = (receiver) => {
-      user.value.receiver = receiver.username
+    const updateReceiver = (r) => {
+      user.value.receiver = r.username
+      receiver.value = r.username
     };
 
     return {

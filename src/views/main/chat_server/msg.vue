@@ -2,19 +2,17 @@
   <div class="layout-container">
 
 
-    <div class="layout-container">
-      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
-        <div class="message">{{ m.content }}</div>
-        <div class="time">{{ m.timestamp }}</div>
-      </div>
+    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
+      <div class="message">{{ m.content }}</div>
+      <div class="time">{{ m.timestamp }}</div>
     </div>
 
   </div>
 
-    <div class="input-container">
-      <input type="text" placeholder="Type your message here..." v-model="messageInput" @keyup.enter="sendMessage">
-      <button @click="sendMessage">Send</button>
-    </div>
+  <div class="input-container" :style="inp_display">
+    <input type="text" placeholder="Type your message here..." v-model="messageInput" @keyup.enter="sendMessage">
+    <button @click="sendMessage">Send</button>
+  </div>
 </template>
   
 <script>
@@ -27,13 +25,22 @@ import { useStore } from 'vuex'
 export default defineComponent({
   setup() {
     const stompClient = ref(null);
-    const fromUser = ref([]);
     const sender = useStore().state.user.info.username;
     const user = ref(null);
     const messages = ref([]);
     const messageInput = ref('');
+    const active = inject('active');
+    const receiver = inject('receiver')
+    const t = ref('')
+    const inp_display = ref('display:none')
 
-    let active = inject('active');
+    watch(receiver, (newValue, oldValue) => {
+      t.value = newValue
+      if(t.value != ""){
+        inp_display.value = 'display:flex'
+      }
+    });
+
 
     const socket = new SockJS(socketData[0].label)
     stompClient.value = Stomp.over(socket)
@@ -47,32 +54,34 @@ export default defineComponent({
 
     const handleUserUpdate = (message) => {
       user.value = message
-      active.value= message
+      active.value = message
 
     };
-    
+
     function sendMessage() {
-      if (messageInput.value) {
-        messages.value.push({
-                      sender: sender,
-                      timestamp: new Date().toLocaleTimeString(),
-                      content: messageInput.value
-                    });
-        messageInput.value = ''
+      if (t.value != "") {
+        if (messageInput.value) {
+          messages.value.push({
+            sender: sender,
+            timestamp: new Date().toLocaleTimeString(),
+            content: messageInput.value
+          });
+          messageInput.value = ''
+        }
       }
     }
 
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: sender,isUser:false, type: 'LEAVE' }));
+      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: sender, isUser: false, type: 'LEAVE' }));
     });
 
     return {
-      fromUser,
       sender,
       messages,
       messageInput,
       sendMessage,
+      inp_display,
     }
   }
 })
@@ -99,7 +108,8 @@ export default defineComponent({
   margin: 10px;
   margin-left: 27px;
   margin-bottom: 25px;
-  word-wrap: break-word; /* 新增的屬性 */
+  word-wrap: break-word;
+  /* 新增的屬性 */
 }
 
 .chat-bubble.sender {
