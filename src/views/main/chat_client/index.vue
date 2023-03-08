@@ -2,9 +2,9 @@
   <div class="container">
     <h1>Chat Room</h1>
     <div class="layout-container">
-      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === 'me' ? 'sender' : 'receiver']">
-        <div class="time">03-07 15:01:31</div>
+      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
         <div class="message">{{ m.content }}</div>
+        <div class="time">{{ m.timestamp }}</div>
       </div>
     </div>
 
@@ -28,10 +28,10 @@ import { v4 as uuidv4 } from 'uuid';
 export default ({
   setup() {
     const stompClient = ref(null);
-    const sender = ref('');
-    const reactive = ref('');
     const messages = ref([]);
     const messageInput = ref('');
+    const user = ref(null);
+    const sender = ref('');
 
     // 檢查cookie中是否有識別碼，如果沒有，生成一個新的識別碼
     let uniqueId = document.cookie.replace(/(?:(?:^|.*;\s*)uniqueId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
@@ -39,24 +39,23 @@ export default ({
       uniqueId = uuidv4();
       document.cookie = `uniqueId=${uniqueId};path=/`;
     }
-    sender.value = uniqueId;
-
-
-
     const socket = new SockJS(socketData[0].label)
     stompClient.value = Stomp.over(socket)
-
     stompClient.value.connect({}, () => {
-      const user = { uniqueId: uniqueId, sender: sender.value, timestamp: new Date() };
-      stompClient.value.send('/app/chat.addUser', {}, JSON.stringify(user))
-      stompClient.value.subscribe('/topic/chat/' + uniqueId, (message) => {
-        handleMessage(JSON.parse(message.body))
+      stompClient.value.subscribe('/topic/userUpdate', (message) => {
+        handleUserUpdate(JSON.parse(message.body))
       })
+      stompClient.value.send('/app/chat.userUpdate', {},
+        JSON.stringify({ sender: uniqueId, timestamp: new Date(), isUser: true, type: 'JOIN' }))
     })
-    
+
+    const handleUserUpdate = (message) => {
+      user.value = message
+      sender.value = message.sender;
+    };
+
     const handleMessage = (message) => {
       messages.value.push({
-        uniqueId: message.uniqueId,
         content: message.content,
       })
     }
@@ -64,16 +63,22 @@ export default ({
 
     function sendMessage() {
       if (messageInput.value) {
-        const message = { id: Date.now(), uniqueId: uniqueId, sender: 'me', content: messageInput.value };
-        messages.value.push(message);
-        console.log(message)
-        console.log(JSON.stringify(message))
-        stompClient.value.send('/app/topic/chat/' + uniqueId, {}, JSON.stringify(message))
+        messages.value.push({
+                      sender: user.value.sender,
+                      timestamp: new Date().toLocaleTimeString(),
+                      content: messageInput.value
+                    });
+        stompClient.value.send('/app/chat.sendMessage', {}, 
+                  JSON.stringify({ sender: uniqueId, content: messageInput.value, timestamp: new Date() }));
         messageInput.value = ''
       }
     }
-
+    window.addEventListener('beforeunload', function (e) {
+      e.preventDefault();
+      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: uniqueId, isUser: true, type: 'LEAVE' }));
+    });
     return {
+      sender,
       messages,
       messageInput,
       sendMessage,
@@ -160,15 +165,16 @@ button:hover:not(:disabled) {
   max-width: 70%;
   padding: 10px 20px;
   margin-bottom: 25px;
+  word-wrap: break-word; /* 新增的屬性 */
 }
 
 .chat-bubble.sender {
-  background-color: #fff;
+  background-color: #bae2ff;
   margin-left: auto;
 }
 
 .chat-bubble.receiver {
-  background-color: #bae2ff;
+  background-color: #fff;
   margin-right: auto;
 }
 
@@ -182,21 +188,23 @@ button:hover:not(:disabled) {
 
 .chat-bubble.receiver .time {
   position: absolute;
-  top: -15px;
-  left: 0;
-  font-size: 12px;
+  bottom: -20px;
+  left: 0px;
+  font-size: 10px;
   color: #a6a6a6;
   margin: 0;
   padding: 0;
+  width: 65px;
 }
 
 .chat-bubble.sender .time {
   position: absolute;
-  top: -15px;
+  bottom: -20px;
   right: 0;
-  font-size: 12px;
+  font-size: 10px;
   color: #a6a6a6;
   margin: 0;
   padding: 0;
+  width: 65px;
 }
 </style>

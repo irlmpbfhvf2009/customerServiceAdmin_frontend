@@ -4,54 +4,53 @@
       <h2>列表</h2>
     </div>
     <ul class="list system-scrollbar">
-      <li v-for="u in users" >
-        <span>{{u.username}}</span>
-
+      <li v-for="receiver in fromUser" @click="updateReceiver(receiver)">
+        <i class="el-icon-user-solid" :style="{ color: receiver.online }"></i>
+        <span>{{ receiver.username }}</span>
       </li>
     </ul>
   </div>
 </template>
   
 <script>
-import { defineComponent, ref, inject } from "vue";
-import Stomp from "stompjs";
-import SockJS from "sockjs-client/dist/sockjs.min.js";
-import { socketData } from './enum';
-import { useStore } from 'vuex'
+import { defineComponent, ref, inject,watch } from "vue";
 export default defineComponent({
 
   setup() {
-    const stompClient = ref(null);
-    const sender = ref('');
-    const reactive = ref('');
-    const messages = ref([]);
-    const messageInput = ref('');
-    const users = ref([]);
-    const store = useStore()
+    const fromUser = ref([]);
+    const user = ref(null);
+    const activeCategory = inject('active')
 
-    sender.value = store.state.user.info.username;
-    
-    const socket = new SockJS(socketData[0].label)
-    stompClient.value = Stomp.over(socket)
-    stompClient.value.connect({}, () => {
-      stompClient.value.subscribe('/topic/public' , (message) => {
-        handleUser(JSON.parse(message.body))
-      })
-    })
+    watch(activeCategory, (newValue, oldValue) => {
 
+      user.value = newValue
 
-    const handleUser = (message) => {
-      if(!users.value.find(u => u.username === message.sender)){
-        users.value.push({
-          username: message.sender,
-          ip: message.ip,
-          timestamp: message.timestamp,
-        })
-        console.log(users.value)
+      const existingUserIndex = fromUser.value.findIndex(u => u.username === newValue.sender);
+      if (newValue.type === 'JOIN' && newValue.isUser === true) {
+        if (existingUserIndex === -1) {
+          fromUser.value.push({
+            username: newValue.sender,
+            ip: newValue.ip,
+            timestamp: newValue.timestamp,
+            online: '#67C23A',
+          });
+        } else {
+          fromUser.value[existingUserIndex].online = '#67C23A';
+        }
+      } else if (newValue.type === 'LEAVE') {
+        if (existingUserIndex !== -1) {
+          fromUser.value[existingUserIndex].online = '';
+        }
       }
-    }
+    });
+
+    const updateReceiver = (receiver) => {
+      user.value.receiver = receiver.username
+    };
+
     return {
-      users,
+      fromUser,
+      updateReceiver,
     };
   },
 });

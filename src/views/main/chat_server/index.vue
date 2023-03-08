@@ -13,7 +13,7 @@
 <script>
 import guest from './guest.vue'
 import msg from './msg.vue'
-import { defineComponent } from 'vue'
+import { defineComponent,provide,ref } from 'vue'
 
 export default defineComponent({
   name: 'index',
@@ -22,6 +22,8 @@ export default defineComponent({
     msg,
   },
   setup() {
+    let active = ref({})
+    provide('active', active)
     return {
     }
   }

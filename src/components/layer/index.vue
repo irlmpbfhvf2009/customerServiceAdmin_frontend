@@ -10,7 +10,7 @@
       <slot></slot>
       <template #footer v-if="layer.showButton">
         <div>
-          <el-button type="primary" @click="confirm">确认</el-button>
+          <el-button type="primary" @click="confirm">確認</el-button>
           <el-button @click="close">取消</el-button>
         </div>
       </template>
