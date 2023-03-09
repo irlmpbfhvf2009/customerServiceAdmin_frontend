@@ -2,7 +2,7 @@
   <div class="container">
     <h1>Chat Room</h1>
     <div class="layout-container">
-      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
+      <div v-for="m in messages" class="chat-bubble" :class="[m.sender === uniqueId ? 'sender' : 'receiver']">
         <div class="message">{{ m.content }}</div>
         <div class="time">{{ m.timestamp }}</div>
       </div>
@@ -31,7 +31,6 @@ export default ({
     const messages = ref([]);
     const messageInput = ref('');
     const user = ref(null);
-    const sender = ref('');
 
     // 檢查cookie中是否有識別碼，如果沒有，生成一個新的識別碼
     let uniqueId = document.cookie.replace(/(?:(?:^|.*;\s*)uniqueId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
@@ -45,40 +44,58 @@ export default ({
       stompClient.value.subscribe('/topic/userUpdate', (message) => {
         handleUserUpdate(JSON.parse(message.body))
       })
+      stompClient.value.subscribe('/user/'+uniqueId+'/queue/messages', (message) => {
+        console.log("進入/user/queue/messages")
+        const chatMessage = JSON.parse(message.body)
+        console.log(chatMessage)
+        chatMessage.timestamp = new Date(chatMessage.timestamp).toLocaleTimeString()
+        messages.value.push(chatMessage)
+      })
+      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + uniqueId, message => {
+        console.log("進入/exchange/offline.message.exchange/user")
+        const content = JSON.parse(message.body).content;
+        console.log('Received message:', content);
+      })
       stompClient.value.send('/app/chat.userUpdate', {},
         JSON.stringify({ sender: uniqueId, timestamp: new Date(), isUser: true, type: 'JOIN' }))
     })
 
     const handleUserUpdate = (message) => {
+      console.log(message)
+      console.log('----------------')
       user.value = message
-      sender.value = message.sender;
+      console.log( user.value )
     };
-
-    const handleMessage = (message) => {
-      messages.value.push({
-        content: message.content,
-      })
-    }
 
 
     function sendMessage() {
-      if (messageInput.value) {
-        messages.value.push({
-                      sender: user.value.sender,
-                      timestamp: new Date().toLocaleTimeString(),
-                      content: messageInput.value
-                    });
-        stompClient.value.send('/app/chat.sendMessage', {}, 
-                  JSON.stringify({ sender: uniqueId, content: messageInput.value, timestamp: new Date() }));
-        messageInput.value = ''
+      if(user.value.receiver === null){
+        location.reload();
       }
+      if (messageInput.value && messageInput.value !== '') {
+        messages.value.push({
+          sender: uniqueId,
+          timestamp: new Date().toLocaleTimeString(),
+          content: messageInput.value
+        });
+      }
+      stompClient.value.send('/app/chat.sendMessage', {},
+                  JSON.stringify({
+                    sender: uniqueId,
+                    receiver: user.value.receiver,
+                    isUser:true,
+                    ip: user.value.ip,
+                    content: messageInput.value,
+                    timestamp: new Date()
+                  }));
+      messageInput.value = ''
     }
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
       stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: uniqueId, isUser: true, type: 'LEAVE' }));
     });
     return {
-      sender,
+      uniqueId,
       messages,
       messageInput,
       sendMessage,
@@ -165,7 +182,8 @@ button:hover:not(:disabled) {
   max-width: 70%;
   padding: 10px 20px;
   margin-bottom: 25px;
-  word-wrap: break-word; /* 新增的屬性 */
+  word-wrap: break-word;
+  /* 新增的屬性 */
 }
 
 .chat-bubble.sender {

@@ -1,11 +1,11 @@
 <template>
   <div class="layout-container">
+    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']" >
+    <!-- <div v-for="m in messages.filter(item => item.sender === t || itme.receiver === sender)" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']" > -->
 
-
-    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
       <div class="message">{{ m.content }}</div>
-      <div class="time">{{ m.timestamp }}</div>
-    </div>
+        <div class="time">{{ m.timestamp }}</div>
+      </div>
 
   </div>
 
@@ -36,7 +36,7 @@ export default defineComponent({
 
     watch(receiver, (newValue, oldValue) => {
       t.value = newValue
-      if(t.value != ""){
+      if (t.value != "") {
         inp_display.value = 'display:flex'
       }
     });
@@ -44,9 +44,21 @@ export default defineComponent({
 
     const socket = new SockJS(socketData[0].label)
     stompClient.value = Stomp.over(socket)
-    stompClient.value.connect({}, () => {
+    stompClient.value.connect({ headers: { 'user': sender } }, () => {
       stompClient.value.subscribe('/topic/userUpdate', (message) => {
         handleUserUpdate(JSON.parse(message.body))
+      })
+      stompClient.value.subscribe('/user/' + sender + '/queue/messages', (message) => {
+        const chatMessage = JSON.parse(message.body)
+        console.log("進入/user/queue/messages")
+        console.log(chatMessage)
+        chatMessage.timestamp = new Date(chatMessage.timestamp).toLocaleTimeString()
+        messages.value.push(chatMessage);
+      })
+      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + sender, message => {
+        console.log("進入/exchange/offline.message.exchange/user")
+        const content = JSON.parse(message.body).content;
+        console.log('Received message:', content);
       })
       stompClient.value.send('/app/chat.userUpdate', {},
         JSON.stringify({ sender: sender, timestamp: new Date(), isUser: false, type: 'JOIN' }))
@@ -66,8 +78,17 @@ export default defineComponent({
             timestamp: new Date().toLocaleTimeString(),
             content: messageInput.value
           });
-          messageInput.value = ''
         }
+        stompClient.value.send('/app/chat.sendMessage', {},
+          JSON.stringify({
+            sender: sender,
+            receiver: t.value,
+            isUser: false,
+            ip: user.value.ip,
+            content: messageInput.value,
+            timestamp: new Date()
+          }));
+        messageInput.value = ''
       }
     }
 
@@ -77,6 +98,7 @@ export default defineComponent({
     });
 
     return {
+      t,
       sender,
       messages,
       messageInput,
