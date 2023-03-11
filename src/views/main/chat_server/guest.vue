@@ -4,9 +4,9 @@
       <h2>列表</h2>
     </div>
     <ul class="list system-scrollbar">
-      <li v-for="receiver in fromUser" @click="updateReceiver(receiver)">
-        <i class="el-icon-user-solid" :style="{ color: receiver.online }"></i>
-        <span>{{ receiver.username }}</span>
+      <li v-for="user in fromUser" @click="showMessage(user.sender)">
+        <i class="el-icon-user-solid" :style="{ color: user.online }"></i>
+        <span>{{ user.sender }}</span>
       </li>
     </ul>
   </div>
@@ -18,39 +18,28 @@ export default defineComponent({
 
   setup() {
     const fromUser = ref([]);
-    const user = ref(null);
-    const active= inject('active')
-    const receiver = inject('receiver')
+    const active= inject('active');
+    const receiver= inject('receiver');
 
     watch(active, (newValue, oldValue) => {
-      user.value = newValue
-      const existingUserIndex = fromUser.value.findIndex(u => u.username === newValue.sender);
-      if (newValue.type === 'JOIN' && newValue.isUser === true) {
+      const existingUserIndex = fromUser.value.findIndex(u => u.sender === newValue.sender);
         if (existingUserIndex === -1) {
           fromUser.value.push({
-            username: newValue.sender,
-            ip: newValue.ip,
-            timestamp: newValue.timestamp,
-            online: '#67C23A',
-          });
-        } else {
-          fromUser.value[existingUserIndex].online = '#67C23A';
+              sender: newValue.sender,
+              online: newValue.isOnline ? '#67C23A' : '',
+            });
+        }else{
+          fromUser.value[existingUserIndex].online = newValue.isOnline ? '#67C23A' : '';
         }
-      } else if (newValue.type === 'LEAVE') {
-        if (existingUserIndex !== -1) {
-          fromUser.value[existingUserIndex].online = '';
-        }
-      }
     });
 
-    const updateReceiver = (r) => {
-      user.value.receiver = r.username
-      receiver.value = r.username
+    const showMessage = (sender) => {
+      receiver.value = sender;
     };
 
     return {
       fromUser,
-      updateReceiver,
+      showMessage
     };
   },
 });

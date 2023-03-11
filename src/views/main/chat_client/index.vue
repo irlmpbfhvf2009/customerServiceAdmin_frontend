@@ -57,7 +57,7 @@ export default ({
         console.log('Received message:', content);
       })
       stompClient.value.send('/app/chat.userUpdate', {},
-        JSON.stringify({ sender: uniqueId, timestamp: new Date(), isUser: true, type: 'JOIN' }))
+        JSON.stringify({ sender: uniqueId, timestamp: new Date(), isUser: true,isOnline:true, type: 'JOIN' }))
     })
 
     const handleUserUpdate = (message) => {
@@ -92,7 +92,7 @@ export default ({
     }
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: uniqueId, isUser: true, type: 'LEAVE' }));
+      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: uniqueId, isUser: true,isOnline:false, type: 'LEAVE' }));
     });
     return {
       uniqueId,

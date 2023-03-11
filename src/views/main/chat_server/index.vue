@@ -24,7 +24,7 @@ export default defineComponent({
   setup() {
     let active = ref({})
     provide('active', active)
-    let receiver = ref({})
+    let receiver = ref('')
     provide('receiver', receiver)
     return {
     }

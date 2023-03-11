@@ -1,11 +1,10 @@
 <template>
   <div class="layout-container">
-    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']" >
-    <!-- <div v-for="m in messages.filter(item => item.sender === t || itme.receiver === sender)" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']" > -->
 
+    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
       <div class="message">{{ m.content }}</div>
-        <div class="time">{{ m.timestamp }}</div>
-      </div>
+      <div class="time">{{ m.timestamp }}</div>
+    </div>
 
   </div>
 
@@ -24,82 +23,90 @@ import { useStore } from 'vuex'
 
 export default defineComponent({
   setup() {
-    const stompClient = ref(null);
-    const sender = useStore().state.user.info.username;
-    const user = ref(null);
-    const messages = ref([]);
-    const messageInput = ref('');
-    const active = inject('active');
-    const receiver = inject('receiver')
-    const t = ref('')
-    const inp_display = ref('display:none')
 
-    watch(receiver, (newValue, oldValue) => {
-      t.value = newValue
-      if (t.value != "") {
-        inp_display.value = 'display:flex'
-      }
+    const stompClient = ref(null);
+    const socket = new SockJS(socketData[0].label);
+    const store = useStore();
+    const user = ref({
+      sender: store.state.user.info.username,
+      receiver: null,
+      ip: store.state.user.info.ip,
+      content: '',
+      timestamp: new Date().toLocaleTimeString(),
+      isUser: false,
+      isOnline: null,
+      type: ''
     });
 
+    const active = inject('active');
+    const receiver = inject('receiver');
+    const messageInput = ref('');
+    const messages = ref([]);
+    const inp_display = ref('display:none')
 
-    const socket = new SockJS(socketData[0].label)
+
+
     stompClient.value = Stomp.over(socket)
-    stompClient.value.connect({ headers: { 'user': sender } }, () => {
+    stompClient.value.connect({}, () => {
       stompClient.value.subscribe('/topic/userUpdate', (message) => {
         handleUserUpdate(JSON.parse(message.body))
       })
-      stompClient.value.subscribe('/user/' + sender + '/queue/messages', (message) => {
+      stompClient.value.subscribe('/user/' + user.value.sender + '/queue/messages', (message) => {
         const chatMessage = JSON.parse(message.body)
-        console.log("進入/user/queue/messages")
-        console.log(chatMessage)
         chatMessage.timestamp = new Date(chatMessage.timestamp).toLocaleTimeString()
         messages.value.push(chatMessage);
       })
-      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + sender, message => {
-        console.log("進入/exchange/offline.message.exchange/user")
+      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + user.value.sender, message => {
         const content = JSON.parse(message.body).content;
-        console.log('Received message:', content);
       })
-      stompClient.value.send('/app/chat.userUpdate', {},
-        JSON.stringify({ sender: sender, timestamp: new Date(), isUser: false, type: 'JOIN' }))
+      user.value.isOnline = true
+      user.value.type = 'JOIN'
+      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify(user.value))
     })
+    
+    watch(receiver, (newValue, oldValue) => {
+      if (newValue) {
+        user.value.receiver = newValue;
+        inp_display.value = 'display:block'
+      }
+    });
 
     const handleUserUpdate = (message) => {
-      user.value = message
-      active.value = message
-
+      if (message.sender !== user.value.sender) {
+        user.value.receiver = message.receiver
+        active.value = message
+      }
     };
 
     function sendMessage() {
-      if (t.value != "") {
-        if (messageInput.value) {
-          messages.value.push({
-            sender: sender,
-            timestamp: new Date().toLocaleTimeString(),
-            content: messageInput.value
-          });
-        }
-        stompClient.value.send('/app/chat.sendMessage', {},
-          JSON.stringify({
-            sender: sender,
-            receiver: t.value,
-            isUser: false,
-            ip: user.value.ip,
-            content: messageInput.value,
-            timestamp: new Date()
-          }));
-        messageInput.value = ''
+      if (messageInput.value) {
+        messages.value.push({
+          sender: sender,
+          timestamp: new Date().toLocaleTimeString(),
+          content: messageInput.value
+        });
       }
+      stompClient.value.send('/app/chat.sendMessage', {},
+        JSON.stringify({
+          sender: sender,
+          receiver: t.value,
+          isUser: false,
+          ip: ip,
+          content: messageInput.value,
+          timestamp: new Date()
+        }));
+      messageInput.value = ''
     }
 
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: sender, isUser: false, type: 'LEAVE' }));
+      user.value.isOnline = false;
+      user.value.type = 'LEAVE';
+      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify(user.value));
     });
 
     return {
-      t,
-      sender,
+      user,
       messages,
       messageInput,
       sendMessage,
