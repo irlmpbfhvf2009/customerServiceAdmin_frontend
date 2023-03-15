@@ -19,9 +19,10 @@ export default defineComponent({
   setup() {
     const fromUser = ref([]);
     const active= inject('active');
-    const receiver= inject('receiver');
 
     watch(active, (newValue, oldValue) => {
+      console.log('newValue')
+      console.log(newValue)
       const existingUserIndex = fromUser.value.findIndex(u => u.sender === newValue.sender);
         if (existingUserIndex === -1) {
           fromUser.value.push({

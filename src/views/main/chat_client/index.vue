@@ -4,7 +4,7 @@
     <div class="layout-container">
       <div v-for="m in messages" class="chat-bubble" :class="[m.sender === uniqueId ? 'sender' : 'receiver']">
         <div class="message">{{ m.content }}</div>
-        <div class="time">{{ m.timestamp }}</div>
+        <div class="time">{{ m.timestamp.toLocaleTimeString() }}</div>
       </div>
     </div>
 
@@ -27,72 +27,77 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default ({
   setup() {
-    const stompClient = ref(null);
-    const messages = ref([]);
-    const messageInput = ref('');
-    const user = ref(null);
-
     // 檢查cookie中是否有識別碼，如果沒有，生成一個新的識別碼
     let uniqueId = document.cookie.replace(/(?:(?:^|.*;\s*)uniqueId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
     if (!uniqueId) {
       uniqueId = uuidv4();
       document.cookie = `uniqueId=${uniqueId};path=/`;
     }
+
+    const chatMessage = ref({
+      sender: uniqueId,
+      receiver: null,
+      ip: null,
+      content: '',
+      timestamp: new Date(),
+      isUser: true,
+      isOnline: true,
+    });
+    const stompClient = ref(null);
     const socket = new SockJS(socketData[0].label)
+    const messages = ref([]);
+    const messageInput = ref('');
+
     stompClient.value = Stomp.over(socket)
-    stompClient.value.connect({}, () => {
-      stompClient.value.subscribe('/topic/userUpdate', (message) => {
-        handleUserUpdate(JSON.parse(message.body))
+    stompClient.value.connect({ debug: null }, () => {
+      chatMessage.value.isOnline = true;
+      stompClient.value.subscribe('/topic/userOnlineStatus', (message) => {
+        handleOnlineStatus(JSON.parse(message.body))
       })
-      stompClient.value.subscribe('/user/'+uniqueId+'/queue/messages', (message) => {
-        console.log("進入/user/queue/messages")
-        const chatMessage = JSON.parse(message.body)
-        console.log(chatMessage)
-        chatMessage.timestamp = new Date(chatMessage.timestamp).toLocaleTimeString()
-        messages.value.push(chatMessage)
+      stompClient.value.subscribe('/user/' + uniqueId + '/queue/messages', (message) => {
+        const queueMessage = JSON.parse(message.body)
+        messages.value.push(queueMessage)
       })
-      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + uniqueId, message => {
-        console.log("進入/exchange/offline.message.exchange/user")
-        const content = JSON.parse(message.body).content;
-        console.log('Received message:', content);
-      })
-      stompClient.value.send('/app/chat.userUpdate', {},
-        JSON.stringify({ sender: uniqueId, timestamp: new Date(), isUser: true,isOnline:true, type: 'JOIN' }))
+      stompClient.value.send('/app/chat.userOnlineStatus', {}, JSON.stringify(chatMessage.value));
+      
     })
 
-    const handleUserUpdate = (message) => {
-      console.log(message)
-      console.log('----------------')
-      user.value = message
-      console.log( user.value )
-    };
-
+    function handleOnlineStatus(message) {
+      // new arraylist
+      let adminList = new Set();
+      for (let i = 0; i < message.length; i++) {
+        if (!message[i].isUser) {
+          adminList.add(message[i]);
+        }
+      }
+      // random admin
+      if (adminList.size === 0) {
+        alert('尚無客服人員')
+        return
+      }
+      let randomAdmin = Array.from(adminList)[Math.floor(Math.random() * adminList.size)];
+      chatMessage.value.receiver = randomAdmin.sender;
+    }
 
     function sendMessage() {
-      if(user.value.receiver === null){
-        location.reload();
+      if (chatMessage.value.receiver === null) {
+        alert('尚無客服人員')
+        return
       }
-      if (messageInput.value && messageInput.value !== '') {
-        messages.value.push({
-          sender: uniqueId,
-          timestamp: new Date().toLocaleTimeString(),
-          content: messageInput.value
-        });
+      if (messageInput.value === '') {
+        return
       }
-      stompClient.value.send('/app/chat.sendMessage', {},
-                  JSON.stringify({
-                    sender: uniqueId,
-                    receiver: user.value.receiver,
-                    isUser:true,
-                    ip: user.value.ip,
-                    content: messageInput.value,
-                    timestamp: new Date()
-                  }));
+      chatMessage.value.content = messageInput.value;
+      stompClient.value.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage.value));
+      if (messageInput.value) {
+        messages.value.push(chatMessage.value);
+      }
       messageInput.value = ''
     }
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify({ sender: uniqueId, isUser: true,isOnline:false, type: 'LEAVE' }));
+      chatMessage.value.isOnline = false;
+      stompClient.value.send('/app/chat.userOnlineStatus', {}, JSON.stringify(chatMessage.value));
     });
     return {
       uniqueId,

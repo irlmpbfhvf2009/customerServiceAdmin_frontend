@@ -1,7 +1,7 @@
 <template>
   <div class="layout-container">
 
-    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === sender ? 'sender' : 'receiver']">
+    <div v-for="m in messages" class="chat-bubble" :class="[m.sender === chatMessage.sender ? 'sender' : 'receiver']">
       <div class="message">{{ m.content }}</div>
       <div class="time">{{ m.timestamp }}</div>
     </div>
@@ -24,89 +24,72 @@ import { useStore } from 'vuex'
 export default defineComponent({
   setup() {
 
-    const stompClient = ref(null);
-    const socket = new SockJS(socketData[0].label);
     const store = useStore();
-    const user = ref({
+    const chatMessage = ref({
       sender: store.state.user.info.username,
       receiver: null,
       ip: store.state.user.info.ip,
       content: '',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date(),
       isUser: false,
-      isOnline: null,
-      type: ''
+      isOnline: true,
     });
+    const stompClient = ref(null);
+    const socket = new SockJS(socketData[0].label);
+    const messages = ref([]);
+    const messageInput = ref('');
 
     const active = inject('active');
-    const receiver = inject('receiver');
-    const messageInput = ref('');
-    const messages = ref([]);
     const inp_display = ref('display:none')
 
 
 
     stompClient.value = Stomp.over(socket)
-    stompClient.value.connect({}, () => {
-      stompClient.value.subscribe('/topic/userUpdate', (message) => {
-        handleUserUpdate(JSON.parse(message.body))
+    stompClient.value.connect({ debug: null }, () => {
+      chatMessage.value.isOnline = true
+      stompClient.value.subscribe('/topic/userOnlineStatus', (message) => {
+        handleOnlineStatus(JSON.parse(message.body))
       })
-      stompClient.value.subscribe('/user/' + user.value.sender + '/queue/messages', (message) => {
-        const chatMessage = JSON.parse(message.body)
-        chatMessage.timestamp = new Date(chatMessage.timestamp).toLocaleTimeString()
-        messages.value.push(chatMessage);
+      stompClient.value.subscribe('/user/' + chatMessage.value.sender + '/queue/messages', (message) => {
+        handleQueueMessage(JSON.parse(message.body))
       })
-      stompClient.value.subscribe('/exchange/offline.message.exchange/user.' + user.value.sender, message => {
-        const content = JSON.parse(message.body).content;
-      })
-      user.value.isOnline = true
-      user.value.type = 'JOIN'
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify(user.value))
+      stompClient.value.send('/app/chat.userOnlineStatus', {}, JSON.stringify(chatMessage.value))
     })
     
-    watch(receiver, (newValue, oldValue) => {
-      if (newValue) {
-        user.value.receiver = newValue;
+    // watch(receiver, (newValue, oldValue) => {
+    //   if (newValue) {
+    //     chatMessage.value.receiver = newValue;
+    //     inp_display.value = 'display:block'
+    //   }
+    // });
+    function handleOnlineStatus(message) {
+      console.log("in handleOnlineStatus")
+    }
+    function handleQueueMessage(message) {
+      console.log("in handleQueueMessage")
+      messages.value.push(message)
+      if(message.receiver !== chatMessage.value.sender){
         inp_display.value = 'display:block'
       }
-    });
-
-    const handleUserUpdate = (message) => {
-      if (message.sender !== user.value.sender) {
-        user.value.receiver = message.receiver
-        active.value = message
-      }
-    };
-
+    }
     function sendMessage() {
+      console.log("in sendMessage")
       if (messageInput.value) {
-        messages.value.push({
-          sender: sender,
-          timestamp: new Date().toLocaleTimeString(),
-          content: messageInput.value
-        });
+        chatMessage.value.content = messageInput.value;
+        messages.value.push(chatMessage.value);
       }
-      stompClient.value.send('/app/chat.sendMessage', {},
-        JSON.stringify({
-          sender: sender,
-          receiver: t.value,
-          isUser: false,
-          ip: ip,
-          content: messageInput.value,
-          timestamp: new Date()
-        }));
+      stompClient.value.send('/app/chat.sendMessage', {},JSON.stringify(chatMessage.value));
       messageInput.value = ''
     }
 
     window.addEventListener('beforeunload', function (e) {
       e.preventDefault();
       user.value.isOnline = false;
-      user.value.type = 'LEAVE';
-      stompClient.value.send('/app/chat.userUpdate', {}, JSON.stringify(user.value));
+      stompClient.value.send('/app/chat.userOnlineStatus', {}, JSON.stringify(chatMessage.value));
     });
 
     return {
-      user,
+      chatMessage,
       messages,
       messageInput,
       sendMessage,
@@ -187,7 +170,7 @@ export default defineComponent({
   right: 100px;
   width: 60%;
   height: 50px;
-  padding: 0 10px;
+  padding: 10px 0 0 10px;
   background-color: #fff;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -197,6 +180,7 @@ export default defineComponent({
 .input-container input[type='text'] {
   flex: 1;
   height: 40px;
+  width: 80%;
   padding: 0 10px;
   border: none;
   outline: none;
@@ -207,6 +191,7 @@ export default defineComponent({
   background-color: blue;
   color: white;
   font-size: 16px;
+  width: 10%;
   padding: 10px;
   border: none;
   border-radius: 5px;
